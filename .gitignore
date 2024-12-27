@@ -1,0 +1,6 @@
+# temp folder
+tmp/
+
+# config
+.env
+/config/config-production.yml

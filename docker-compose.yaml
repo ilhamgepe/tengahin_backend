@@ -1,0 +1,35 @@
+services:
+  postgres:
+    container_name: tengahin_postgres17
+    image: postgres:17.2-alpine3.20
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=tengahin
+    ports:
+      - "5433:5432"
+    networks:
+      - tengahin
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    container_name: tengahin_redis
+    image: redis:8.0-M02-alpine
+    environment:
+      - REDIS_PASSWORD=root
+    command: ["redis-server", "--requirepass", "root"]
+    ports:
+      - "6378:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - tengahin
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  tengahin:
+    driver: bridge

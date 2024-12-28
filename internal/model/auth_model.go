@@ -14,6 +14,10 @@ type LoginDTO struct {
 	Password string `json:"password" form:"password" validate:"required,min=6" db:"password"`
 }
 
+type RefreshTokenDTO struct {
+	RefreshToken string `json:"refresh_token" form:"refresh_token" validate:"required"`
+}
+
 func (u *RegisterDTO) HashPassword() error {
 	byte, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
 	if err != nil {

@@ -31,6 +31,6 @@ func NewPostgresDB(cfg *config.Config, logger *zerolog.Logger) *sqlx.DB {
 	if err := db.DB.Ping(); err != nil {
 		logger.Fatal().Err(err).Msg("failed to ping db")
 	}
-
+	logger.Info().Msg("db connected")
 	return db
 }

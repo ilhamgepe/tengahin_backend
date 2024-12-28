@@ -17,14 +17,17 @@ type Config struct {
 
 // Server config struct
 type ServerConfig struct {
-	AppVersion        string
-	Port              string
-	Mode              string
-	SessionSecretKey  string
-	CookieName        string
-	ReadTimeout       time.Duration
-	WriteTimeout      time.Duration
-	CtxDefaultTimeout time.Duration
+	AppVersion           string
+	Port                 string
+	Mode                 string
+	JWTSecretKey         string
+	JWTRefreshSecretKey  string
+	TokenDuration        time.Duration
+	RefreshTokenDuration time.Duration
+	CookieName           string
+	ReadTimeout          time.Duration
+	WriteTimeout         time.Duration
+	CtxDefaultTimeout    time.Duration
 }
 
 // Postgresql config

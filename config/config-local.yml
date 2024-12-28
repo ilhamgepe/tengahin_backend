@@ -2,7 +2,10 @@ server:
   AppVersion: 1.0.0
   Port: :8080
   Mode: development
-  SessionSecretKey: bf16195157b940cd47b29c7adaadabcf019ede67d5b8c7cd485a006784b0ffed
+  JWTSecretKey: bf16195157b940cd47b29c7adaadabcf019ede67d5b8c7cd485a006784b0ffed
+  JWTRefreshSecretKey: 466aaefe4a1a46e2f471ae221d02639507b43348fd69e80de1ab73e4eceee124
+  TokenDuration: "1m"
+  RefreshTokenDuration: "24h"
   CookieName: jwt-token
   ReadTimeout: 10
   WriteTimeout: 30

@@ -21,6 +21,7 @@ func NewOauthProviders(cfg *config.Config) *OauthProviders {
 			Endpoint:     google.Endpoint,
 			Scopes: []string{
 				"https://www.googleapis.com/auth/userinfo.profile",
+				"https://www.googleapis.com/auth/userinfo.email",
 			},
 		},
 		Github: &oauth2.Config{

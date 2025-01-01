@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"time"
@@ -18,7 +20,6 @@ const (
 
 func (h *AuthHandler) GoogleLogin(c echo.Context) error {
 	url := h.oauthProvider.Google.AuthCodeURL(googleState)
-	// log.Info().Str("url", url).Msg("url")
 	return c.Redirect(http.StatusTemporaryRedirect, url)
 }
 
@@ -78,9 +79,77 @@ func (h *AuthHandler) GoogleCallback(c echo.Context) error {
 		})
 	}
 
-	return c.JSON(http.StatusOK, httpresponse.RestSuccess{
+	// check user in db if exist
+	user, err := h.userService.FindByEmail(c.Request().Context(), userInfo.Email)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return httpresponse.KnownSQLError(c, err)
+	}
+
+	// if not exist, create new user
+	if errors.Is(err, sql.ErrNoRows) {
+		user, err = h.userService.CreateUser(c.Request().Context(), model.RegisterDTO{
+			Email:    userInfo.Email,
+			Username: userInfo.GivenName,
+			Fullname: userInfo.Name,
+		})
+		if err != nil {
+			return httpresponse.KnownSQLError(c, err)
+		}
+		user.Sanitize()
+	}
+
+	// generate token
+	accessToken, payload, err := h.tokenMaker.CreateToken(user.ID, h.cfg.Server.TokenDuration)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, httpresponse.RestError{
+			ErrError:  echo.ErrInternalServerError.Error(),
+			ErrCauses: err.Error(),
+		})
+	}
+
+	refreshToken, payloadRefresh, err := h.tokenMaker.CreateRefreshToken(user.ID, h.cfg.Server.RefreshTokenDuration)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, httpresponse.RestError{
+			ErrError:  echo.ErrInternalServerError.Error(),
+			ErrCauses: err.Error(),
+		})
+	}
+
+	userJSON, err := json.Marshal(user)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, httpresponse.RestError{
+			ErrError:  echo.ErrInternalServerError.Error(),
+			ErrCauses: err.Error(),
+		})
+	}
+
+	expiresIn := time.Until(payload.ExpiresAt.Time)
+	rediRes := h.rdb.Set(c.Request().Context(), payload.ID, userJSON, expiresIn)
+	if rediRes.Err() != nil {
+		return c.JSON(http.StatusInternalServerError, httpresponse.RestError{
+			ErrError:  echo.ErrInternalServerError.Error(),
+			ErrCauses: rediRes.Err().Error(),
+		})
+	}
+
+	expiresIn = time.Until(payloadRefresh.ExpiresAt.Time)
+	redisRefreshRes := h.rdb.Set(c.Request().Context(), payloadRefresh.ID, refreshToken, expiresIn)
+	if redisRefreshRes.Err() != nil {
+		return c.JSON(http.StatusInternalServerError, httpresponse.RestError{
+			ErrError:  echo.ErrInternalServerError.Error(),
+			ErrCauses: redisRefreshRes.Err().Error(),
+		})
+	}
+
+	return c.JSON(200, httpresponse.RestSuccess{
 		Status: http.StatusOK,
-		Data:   userInfo,
+		Data: map[string]interface{}{
+			"access_token":             accessToken,
+			"expires_at":               payload.ExpiresAt,
+			"refresh_token":            refreshToken,
+			"refresh_token_expires_at": payloadRefresh.ExpiresAt,
+			"user":                     user,
+		},
 	})
 }
 
@@ -138,14 +207,83 @@ func (h *AuthHandler) GithubCallback(c echo.Context) error {
 		})
 	}
 
-	var userData model.GitHubUserInfo
-	if err := json.NewDecoder(resp.Body).Decode(&userData); err != nil {
+	var userInfo model.GitHubUserInfo
+	if err := json.NewDecoder(resp.Body).Decode(&userInfo); err != nil {
 		return c.JSON(http.StatusInternalServerError, httpresponse.RestError{
 			ErrCauses: "failed to unmarshal response body",
 		})
 	}
 
-	return c.JSON(http.StatusOK, echo.Map{
-		"userData": userData,
+	// check user in db if exist
+	user, err := h.userService.FindByEmail(c.Request().Context(), userInfo.Email)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return httpresponse.KnownSQLError(c, err)
+	}
+
+	// if not exist, create new user
+	if errors.Is(err, sql.ErrNoRows) {
+		user, err = h.userService.CreateUser(c.Request().Context(), model.RegisterDTO{
+			Email:    userInfo.Email,
+			Username: userInfo.Login,
+			Fullname: *userInfo.Name,
+		})
+		if err != nil {
+			return httpresponse.KnownSQLError(c, err)
+		}
+		user.Sanitize()
+	}
+
+	// generate token
+	accessToken, payload, err := h.tokenMaker.CreateToken(user.ID, h.cfg.Server.TokenDuration)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, httpresponse.RestError{
+			ErrError:  echo.ErrInternalServerError.Error(),
+			ErrCauses: err.Error(),
+		})
+	}
+
+	refreshToken, payloadRefresh, err := h.tokenMaker.CreateRefreshToken(user.ID, h.cfg.Server.RefreshTokenDuration)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, httpresponse.RestError{
+			ErrError:  echo.ErrInternalServerError.Error(),
+			ErrCauses: err.Error(),
+		})
+	}
+
+	userJSON, err := json.Marshal(user)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, httpresponse.RestError{
+			ErrError:  echo.ErrInternalServerError.Error(),
+			ErrCauses: err.Error(),
+		})
+	}
+
+	expiresIn := time.Until(payload.ExpiresAt.Time)
+	rediRes := h.rdb.Set(c.Request().Context(), payload.ID, userJSON, expiresIn)
+	if rediRes.Err() != nil {
+		return c.JSON(http.StatusInternalServerError, httpresponse.RestError{
+			ErrError:  echo.ErrInternalServerError.Error(),
+			ErrCauses: rediRes.Err().Error(),
+		})
+	}
+
+	expiresIn = time.Until(payloadRefresh.ExpiresAt.Time)
+	redisRefreshRes := h.rdb.Set(c.Request().Context(), payloadRefresh.ID, refreshToken, expiresIn)
+	if redisRefreshRes.Err() != nil {
+		return c.JSON(http.StatusInternalServerError, httpresponse.RestError{
+			ErrError:  echo.ErrInternalServerError.Error(),
+			ErrCauses: redisRefreshRes.Err().Error(),
+		})
+	}
+
+	return c.JSON(200, httpresponse.RestSuccess{
+		Status: http.StatusOK,
+		Data: map[string]interface{}{
+			"access_token":             accessToken,
+			"expires_at":               payload.ExpiresAt,
+			"refresh_token":            refreshToken,
+			"refresh_token_expires_at": payloadRefresh.ExpiresAt,
+			"user":                     user,
+		},
 	})
 }

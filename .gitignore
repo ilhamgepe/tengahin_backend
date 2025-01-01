@@ -3,4 +3,4 @@ tmp/
 
 # config
 .env
-/config/config-production.yml
+/config/config-production.ymlconfig/config-local.yml

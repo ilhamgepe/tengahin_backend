@@ -8,11 +8,9 @@ import (
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/labstack/echo/v4"
-	"github.com/rs/zerolog/log"
 )
 
 func KnownSQLError(c echo.Context, err error) error {
-	log.Error().Err(err).Msg("memek loding")
 	if errors.Is(err, sql.ErrNoRows) {
 		return c.JSON(http.StatusNotFound, RestError{
 			ErrError:  echo.ErrNotFound.Error(),

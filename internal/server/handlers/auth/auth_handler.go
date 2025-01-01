@@ -10,6 +10,7 @@ import (
 	"github.com/ilhamgepe/tengahin/internal/model"
 	"github.com/ilhamgepe/tengahin/internal/service"
 	httpresponse "github.com/ilhamgepe/tengahin/pkg/httpResponse"
+	"github.com/ilhamgepe/tengahin/pkg/oauth"
 	"github.com/ilhamgepe/tengahin/pkg/token"
 	"github.com/ilhamgepe/tengahin/pkg/utils"
 	"github.com/labstack/echo/v4"
@@ -18,18 +19,20 @@ import (
 )
 
 type AuthHandler struct {
-	userService service.UserService
-	rdb         *redis.Client
-	tokenMaker  token.Maker
-	cfg         *config.Config
+	userService   service.UserService
+	rdb           *redis.Client
+	tokenMaker    token.Maker
+	cfg           *config.Config
+	oauthProvider *oauth.OauthProviders
 }
 
-func NewAuthHandler(userService service.UserService, rdb *redis.Client, tokenMaker token.Maker, cfg *config.Config) *AuthHandler {
+func NewAuthHandler(userService service.UserService, rdb *redis.Client, tokenMaker token.Maker, cfg *config.Config, oauthProviders *oauth.OauthProviders) *AuthHandler {
 	return &AuthHandler{
-		userService: userService,
-		rdb:         rdb,
-		tokenMaker:  tokenMaker,
-		cfg:         cfg,
+		userService:   userService,
+		rdb:           rdb,
+		tokenMaker:    tokenMaker,
+		cfg:           cfg,
+		oauthProvider: oauthProviders,
 	}
 }
 
@@ -149,8 +152,8 @@ func (h *AuthHandler) RefreshToken(c echo.Context) error {
 	}
 
 	// delete old refresh token yang ada di redis
-	redisRes := h.rdb.Del(c.Request().Context(), payload.ID)
-	if redisRes.Err() != nil {
+	redisRes, err := h.rdb.Del(c.Request().Context(), payload.ID).Result()
+	if err != nil || redisRes == 0 {
 		log.Info().Err(err).Msg("failed to delete refresh token")
 		return c.JSON(http.StatusUnauthorized, httpresponse.RestError{
 			ErrError:  echo.ErrUnauthorized.Error(),
@@ -188,7 +191,7 @@ func (h *AuthHandler) RefreshToken(c echo.Context) error {
 		})
 	}
 
-	refreshToken, payloadRefresh, err := h.tokenMaker.CreateToken(user.ID, h.cfg.Server.RefreshTokenDuration)
+	refreshToken, payloadRefresh, err := h.tokenMaker.CreateRefreshToken(user.ID, h.cfg.Server.RefreshTokenDuration)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, httpresponse.RestError{
 			ErrError:  echo.ErrInternalServerError.Error(),
@@ -237,8 +240,42 @@ func (h *AuthHandler) RefreshToken(c echo.Context) error {
 	})
 }
 
+func (h *AuthHandler) Logout(c echo.Context) error {
+	var token model.RefreshTokenDTO
+	if err := c.Bind(&token); err != nil {
+		return utils.HandleValidatorError(c, err)
+	}
+
+	payload, err := h.tokenMaker.VerifyRefreshToken(token.RefreshToken)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, httpresponse.RestError{
+			ErrError:  echo.ErrUnauthorized.Error(),
+			ErrCauses: "unauthorized",
+		})
+	}
+
+	res := h.rdb.Del(c.Request().Context(), payload.ID)
+	log.Info().Any("res", res).Msg("res redis")
+	if res.Err() != nil {
+		return c.JSON(http.StatusUnauthorized, httpresponse.RestError{
+			ErrError:  echo.ErrUnauthorized.Error(),
+			ErrCauses: "unauthorized",
+		})
+	}
+
+	return c.NoContent(http.StatusOK)
+}
+
 func (h *AuthHandler) Me(c echo.Context) error {
-	user := c.Get(model.UserCtxKey)
+	user, ok := c.Get(model.UserCtxKey).(model.User)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, httpresponse.RestError{
+			ErrError:  echo.ErrUnauthorized.Error(),
+			ErrCauses: "unauthorized",
+		})
+	}
+
+	user.Sanitize()
 
 	return c.JSON(200, httpresponse.RestSuccess{
 		Status: http.StatusOK,

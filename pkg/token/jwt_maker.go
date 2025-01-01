@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/rs/zerolog/log"
 )
 
 type JWTMaker struct {
@@ -78,7 +77,6 @@ func (m *JWTMaker) VerifyRefreshToken(token string) (*Payload, error) {
 		}
 		return []byte(m.refreshSecret), nil
 	})
-	log.Error().Err(err).Msg("error")
 	if err != nil {
 		return nil, err
 	}

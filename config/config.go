@@ -13,6 +13,7 @@ type Config struct {
 	Server   ServerConfig
 	Postgres PostgresConfig
 	Redis    RedisConfig
+	Oauth    OauthConfig
 }
 
 // Server config struct
@@ -28,6 +29,16 @@ type ServerConfig struct {
 	ReadTimeout          time.Duration
 	WriteTimeout         time.Duration
 	CtxDefaultTimeout    time.Duration
+}
+
+type OauthConfig struct {
+	GoogleClientID     string
+	GoogleClientSecret string
+	GoogleCallbackURL  string
+
+	GithubClientID     string
+	GithubClientSecret string
+	GithubCallbackURL  string
 }
 
 // Postgresql config

@@ -59,15 +59,14 @@ func TestInvalidJWTTokenAlgorithm(t *testing.T) {
 
 func TestRefreshJWTMaker(t *testing.T) {
 	maker := NewJwtmaker(secret, refreshSecret)
-	token, payload, err := maker.CreateRefreshToken(1, time.Hour)
+	token, payload, err := maker.CreateRefreshToken(1888, time.Hour)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, token)
 	require.NotEmpty(t, payload)
 
 	payload2, err := maker.VerifyRefreshToken(token)
-
-	require.NoError(t, err)
+	require.Nil(t, err)
 	require.Equal(t, payload, payload2)
 	log.Info().Any("payload", payload).Msg("payload")
 	log.Info().Any("payload 2", payload2).Msg("payload 2")

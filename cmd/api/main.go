@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	cfg, err := config.LoadConfig("./config", "config-local")
+	cfg, err := config.LoadConfig("./config", "config-production")
 	if err != nil {
 		fmt.Println("Error loading config:", err)
 		return

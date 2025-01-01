@@ -99,13 +99,13 @@ func (h *AuthHandler) GoogleCallback(c echo.Context) error {
 	}
 
 	// generate token
-	accessToken, payload, err := h.tokenMaker.CreateToken(user.ID, h.cfg.Server.TokenDuration)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, httpresponse.RestError{
-			ErrError:  echo.ErrInternalServerError.Error(),
-			ErrCauses: err.Error(),
-		})
-	}
+	// accessToken, payload, err := h.tokenMaker.CreateToken(user.ID, h.cfg.Server.TokenDuration)
+	// if err != nil {
+	// 	return c.JSON(http.StatusInternalServerError, httpresponse.RestError{
+	// 		ErrError:  echo.ErrInternalServerError.Error(),
+	// 		ErrCauses: err.Error(),
+	// 	})
+	// }
 
 	refreshToken, payloadRefresh, err := h.tokenMaker.CreateRefreshToken(user.ID, h.cfg.Server.RefreshTokenDuration)
 	if err != nil {
@@ -115,24 +115,24 @@ func (h *AuthHandler) GoogleCallback(c echo.Context) error {
 		})
 	}
 
-	userJSON, err := json.Marshal(user)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, httpresponse.RestError{
-			ErrError:  echo.ErrInternalServerError.Error(),
-			ErrCauses: err.Error(),
-		})
-	}
+	// userJSON, err := json.Marshal(user)
+	// if err != nil {
+	// 	return c.JSON(http.StatusInternalServerError, httpresponse.RestError{
+	// 		ErrError:  echo.ErrInternalServerError.Error(),
+	// 		ErrCauses: err.Error(),
+	// 	})
+	// }
 
-	expiresIn := time.Until(payload.ExpiresAt.Time)
-	rediRes := h.rdb.Set(c.Request().Context(), payload.ID, userJSON, expiresIn)
-	if rediRes.Err() != nil {
-		return c.JSON(http.StatusInternalServerError, httpresponse.RestError{
-			ErrError:  echo.ErrInternalServerError.Error(),
-			ErrCauses: rediRes.Err().Error(),
-		})
-	}
+	// expiresIn := time.Until(payload.ExpiresAt.Time)
+	// rediRes := h.rdb.Set(c.Request().Context(), payload.ID, userJSON, expiresIn)
+	// if rediRes.Err() != nil {
+	// 	return c.JSON(http.StatusInternalServerError, httpresponse.RestError{
+	// 		ErrError:  echo.ErrInternalServerError.Error(),
+	// 		ErrCauses: rediRes.Err().Error(),
+	// 	})
+	// }
 
-	expiresIn = time.Until(payloadRefresh.ExpiresAt.Time)
+	expiresIn := time.Until(payloadRefresh.ExpiresAt.Time)
 	redisRefreshRes := h.rdb.Set(c.Request().Context(), payloadRefresh.ID, refreshToken, expiresIn)
 	if redisRefreshRes.Err() != nil {
 		return c.JSON(http.StatusInternalServerError, httpresponse.RestError{
@@ -141,16 +141,7 @@ func (h *AuthHandler) GoogleCallback(c echo.Context) error {
 		})
 	}
 
-	return c.JSON(200, httpresponse.RestSuccess{
-		Status: http.StatusOK,
-		Data: map[string]interface{}{
-			"access_token":             accessToken,
-			"expires_at":               payload.ExpiresAt,
-			"refresh_token":            refreshToken,
-			"refresh_token_expires_at": payloadRefresh.ExpiresAt,
-			"user":                     user,
-		},
-	})
+	return c.Redirect(http.StatusTemporaryRedirect, "http://localhost:3000/api/auth/google/callback?refresh_token="+refreshToken)
 }
 
 func (h *AuthHandler) GithubLogin(c echo.Context) error {
@@ -234,13 +225,13 @@ func (h *AuthHandler) GithubCallback(c echo.Context) error {
 	}
 
 	// generate token
-	accessToken, payload, err := h.tokenMaker.CreateToken(user.ID, h.cfg.Server.TokenDuration)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, httpresponse.RestError{
-			ErrError:  echo.ErrInternalServerError.Error(),
-			ErrCauses: err.Error(),
-		})
-	}
+	// accessToken, payload, err := h.tokenMaker.CreateToken(user.ID, h.cfg.Server.TokenDuration)
+	// if err != nil {
+	// 	return c.JSON(http.StatusInternalServerError, httpresponse.RestError{
+	// 		ErrError:  echo.ErrInternalServerError.Error(),
+	// 		ErrCauses: err.Error(),
+	// 	})
+	// }
 
 	refreshToken, payloadRefresh, err := h.tokenMaker.CreateRefreshToken(user.ID, h.cfg.Server.RefreshTokenDuration)
 	if err != nil {
@@ -250,24 +241,24 @@ func (h *AuthHandler) GithubCallback(c echo.Context) error {
 		})
 	}
 
-	userJSON, err := json.Marshal(user)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, httpresponse.RestError{
-			ErrError:  echo.ErrInternalServerError.Error(),
-			ErrCauses: err.Error(),
-		})
-	}
+	// userJSON, err := json.Marshal(user)
+	// if err != nil {
+	// 	return c.JSON(http.StatusInternalServerError, httpresponse.RestError{
+	// 		ErrError:  echo.ErrInternalServerError.Error(),
+	// 		ErrCauses: err.Error(),
+	// 	})
+	// }
 
-	expiresIn := time.Until(payload.ExpiresAt.Time)
-	rediRes := h.rdb.Set(c.Request().Context(), payload.ID, userJSON, expiresIn)
-	if rediRes.Err() != nil {
-		return c.JSON(http.StatusInternalServerError, httpresponse.RestError{
-			ErrError:  echo.ErrInternalServerError.Error(),
-			ErrCauses: rediRes.Err().Error(),
-		})
-	}
+	// expiresIn := time.Until(payload.ExpiresAt.Time)
+	// rediRes := h.rdb.Set(c.Request().Context(), payload.ID, userJSON, expiresIn)
+	// if rediRes.Err() != nil {
+	// 	return c.JSON(http.StatusInternalServerError, httpresponse.RestError{
+	// 		ErrError:  echo.ErrInternalServerError.Error(),
+	// 		ErrCauses: rediRes.Err().Error(),
+	// 	})
+	// }
 
-	expiresIn = time.Until(payloadRefresh.ExpiresAt.Time)
+	expiresIn := time.Until(payloadRefresh.ExpiresAt.Time)
 	redisRefreshRes := h.rdb.Set(c.Request().Context(), payloadRefresh.ID, refreshToken, expiresIn)
 	if redisRefreshRes.Err() != nil {
 		return c.JSON(http.StatusInternalServerError, httpresponse.RestError{
@@ -276,14 +267,5 @@ func (h *AuthHandler) GithubCallback(c echo.Context) error {
 		})
 	}
 
-	return c.JSON(200, httpresponse.RestSuccess{
-		Status: http.StatusOK,
-		Data: map[string]interface{}{
-			"access_token":             accessToken,
-			"expires_at":               payload.ExpiresAt,
-			"refresh_token":            refreshToken,
-			"refresh_token_expires_at": payloadRefresh.ExpiresAt,
-			"user":                     user,
-		},
-	})
+	return c.Redirect(http.StatusTemporaryRedirect, "http://localhost:3000/api/auth/github/callback?refresh_token="+refreshToken)
 }

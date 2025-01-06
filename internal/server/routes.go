@@ -26,7 +26,7 @@ func (s *Server) MountRoutes() {
 	s.echo.Use(middleware.Recover())
 	s.echo.Use(mm.Zerolog)
 	s.echo.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"http://localhost:5173"},
+		AllowOrigins: []string{"http://localhost:3000"},
 		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
 		AllowMethods: []string{echo.GET, echo.POST, echo.PUT, echo.DELETE},
 	}))
@@ -41,14 +41,14 @@ func (s *Server) MountRoutes() {
 
 	v1 := s.echo.Group("/v1")
 
-	// guest
-	v1AuthRoutes := v1.Group("/auth")
-	v1AuthRoutes.GET("/ok", func(c echo.Context) error {
+	v1.GET("/ok", func(c echo.Context) error {
 		return c.JSON(http.StatusOK, httpresponse.RestSuccess{
 			Status: http.StatusOK,
 			Data:   "ok memek",
 		})
 	})
+	// guest
+	v1AuthRoutes := v1.Group("/auth")
 	v1AuthRoutes.POST("/register", authHandler.Register)
 	v1AuthRoutes.POST("/login", authHandler.Login)
 	v1AuthRoutes.POST("/refresh", authHandler.RefreshToken)

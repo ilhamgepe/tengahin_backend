@@ -255,7 +255,6 @@ func (h *AuthHandler) Logout(c echo.Context) error {
 	}
 
 	res := h.rdb.Del(c.Request().Context(), payload.ID)
-	log.Info().Any("res", res).Msg("res redis")
 	if res.Err() != nil {
 		return c.JSON(http.StatusUnauthorized, httpresponse.RestError{
 			ErrError:  echo.ErrUnauthorized.Error(),

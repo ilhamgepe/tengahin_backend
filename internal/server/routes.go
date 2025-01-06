@@ -1,10 +1,13 @@
 package server
 
 import (
+	"net/http"
+
 	repository "github.com/ilhamgepe/tengahin/internal/repository/postgres"
 	authHandlers "github.com/ilhamgepe/tengahin/internal/server/handlers/auth"
 	middlewareManager "github.com/ilhamgepe/tengahin/internal/server/middleware"
 	"github.com/ilhamgepe/tengahin/internal/service"
+	httpresponse "github.com/ilhamgepe/tengahin/pkg/httpResponse"
 	"github.com/ilhamgepe/tengahin/pkg/oauth"
 	"github.com/ilhamgepe/tengahin/pkg/token"
 	"github.com/labstack/echo/v4"
@@ -23,7 +26,7 @@ func (s *Server) MountRoutes() {
 	s.echo.Use(middleware.Recover())
 	s.echo.Use(mm.Zerolog)
 	s.echo.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"http://localhost:3000"},
+		AllowOrigins: []string{"http://localhost:5173"},
 		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
 		AllowMethods: []string{echo.GET, echo.POST, echo.PUT, echo.DELETE},
 	}))
@@ -40,6 +43,12 @@ func (s *Server) MountRoutes() {
 
 	// guest
 	v1AuthRoutes := v1.Group("/auth")
+	v1AuthRoutes.GET("/ok", func(c echo.Context) error {
+		return c.JSON(http.StatusOK, httpresponse.RestSuccess{
+			Status: http.StatusOK,
+			Data:   "ok memek",
+		})
+	})
 	v1AuthRoutes.POST("/register", authHandler.Register)
 	v1AuthRoutes.POST("/login", authHandler.Login)
 	v1AuthRoutes.POST("/refresh", authHandler.RefreshToken)

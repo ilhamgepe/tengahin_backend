@@ -44,10 +44,11 @@ func (s *Server) MountRoutes() {
 	v1.GET("/ok", func(c echo.Context) error {
 		return c.JSON(http.StatusOK, httpresponse.RestSuccess{
 			Status: http.StatusOK,
-			Data:   "ok memek",
+			Data:   "ok",
 		})
 	})
-	// guest
+
+	// auth routes
 	v1AuthRoutes := v1.Group("/auth")
 	v1AuthRoutes.POST("/register", authHandler.Register)
 	v1AuthRoutes.POST("/login", authHandler.Login)
@@ -58,7 +59,6 @@ func (s *Server) MountRoutes() {
 	v1AuthRoutes.GET("/github", authHandler.GithubLogin)
 	v1AuthRoutes.GET("/github/callback", authHandler.GithubCallback)
 
-	// with auth
-	v1WithAuth := v1.Group("", mm.JWTMiddleware)
-	v1WithAuth.GET("/me", authHandler.Me)
+	// me
+	v1.GET("/me", authHandler.Me, mm.JWTMiddleware)
 }

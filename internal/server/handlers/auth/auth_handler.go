@@ -15,6 +15,7 @@ import (
 	"github.com/ilhamgepe/tengahin/pkg/utils"
 	"github.com/labstack/echo/v4"
 	"github.com/redis/go-redis/v9"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
@@ -24,15 +25,17 @@ type AuthHandler struct {
 	tokenMaker    token.Maker
 	cfg           *config.Config
 	oauthProvider *oauth.OauthProviders
+	logger        *zerolog.Logger
 }
 
-func NewAuthHandler(userService service.UserService, rdb *redis.Client, tokenMaker token.Maker, cfg *config.Config, oauthProviders *oauth.OauthProviders) *AuthHandler {
+func NewAuthHandler(userService service.UserService, rdb *redis.Client, tokenMaker token.Maker, cfg *config.Config, oauthProviders *oauth.OauthProviders, logger *zerolog.Logger) *AuthHandler {
 	return &AuthHandler{
 		userService:   userService,
 		rdb:           rdb,
 		tokenMaker:    tokenMaker,
 		cfg:           cfg,
 		oauthProvider: oauthProviders,
+		logger:        logger,
 	}
 }
 

@@ -37,7 +37,7 @@ func (s *Server) MountRoutes() {
 	// init service
 	userService := service.NewUserService(userRepo)
 	// init handler
-	authHandler := authHandlers.NewAuthHandler(userService, s.rdb, tokenMaker, s.cfg, oauthProviders)
+	authHandler := authHandlers.NewAuthHandler(userService, s.rdb, tokenMaker, s.cfg, oauthProviders, s.logger)
 
 	v1 := s.echo.Group("/v1")
 

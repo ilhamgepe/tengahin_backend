@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/ilhamgepe/tengahin/config"
+	"github.com/ilhamgepe/tengahin/db/migration"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog"
@@ -32,5 +33,9 @@ func NewPostgresDB(cfg *config.Config, logger *zerolog.Logger) *sqlx.DB {
 		logger.Fatal().Err(err).Msg("failed to ping db")
 	}
 	logger.Info().Msg("db connected")
+
+	// run migration
+	migration.RunDBMigration("file://db/migration", dsn, logger)
+
 	return db
 }

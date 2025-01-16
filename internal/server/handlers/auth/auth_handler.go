@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -73,6 +75,12 @@ func (h *AuthHandler) Login(c echo.Context) error {
 
 	user, err := h.userService.FindByEmail(c.Request().Context(), req.Email)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return c.JSON(http.StatusNotFound, httpresponse.RestError{
+				ErrError:  echo.ErrNotFound.Error(),
+				ErrCauses: "email not registered",
+			})
+		}
 		return httpresponse.KnownSQLError(c, err)
 	}
 

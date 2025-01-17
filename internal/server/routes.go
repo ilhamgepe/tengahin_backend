@@ -5,6 +5,7 @@ import (
 
 	repository "github.com/ilhamgepe/tengahin/internal/repository/postgres"
 	authHandlers "github.com/ilhamgepe/tengahin/internal/server/handlers/auth"
+	roleHandlers "github.com/ilhamgepe/tengahin/internal/server/handlers/user"
 	middlewareManager "github.com/ilhamgepe/tengahin/internal/server/middleware"
 	"github.com/ilhamgepe/tengahin/internal/service"
 	httpresponse "github.com/ilhamgepe/tengahin/pkg/httpResponse"
@@ -33,12 +34,15 @@ func (s *Server) MountRoutes() {
 
 	// init repo
 	userRepo := repository.NewUserRepo(s.db)
+	roleRepo := repository.NewRoleRepo(s.db, s.logger)
 
 	// init service
 	userService := service.NewUserService(userRepo)
+	roleService := service.NewRoleService(roleRepo)
+
 	// init handler
 	authHandler := authHandlers.NewAuthHandler(userService, s.rdb, tokenMaker, s.cfg, oauthProviders, s.logger)
-
+	roleHandler := roleHandlers.NewRoleHandler(roleService, s.cfg, s.logger)
 	v1 := s.echo.Group("/v1")
 
 	v1.GET("/ok", func(c echo.Context) error {
@@ -58,6 +62,10 @@ func (s *Server) MountRoutes() {
 	v1AuthRoutes.GET("/google/callback", authHandler.GoogleCallback)
 	v1AuthRoutes.GET("/github", authHandler.GithubLogin)
 	v1AuthRoutes.GET("/github/callback", authHandler.GithubCallback)
+
+	// role routes
+	v1RoleRoutes := v1.Group("/roles")
+	v1RoleRoutes.POST("/create", roleHandler.CreateRole)
 
 	// me
 	v1.GET("/me", authHandler.Me, mm.JWTMiddleware)

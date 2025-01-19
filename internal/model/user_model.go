@@ -14,6 +14,7 @@ type User struct {
 	Password         string    `json:"password,omitempty" db:"password"`
 	PasswordChangeAt time.Time `json:"password_change_at,omitempty" db:"password_change_at"`
 	CreatedAt        time.Time `json:"created_at" db:"created_at"`
+	Roles            []Role    `json:"roles"`
 }
 
 func (u *User) Sanitize() *User {

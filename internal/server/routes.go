@@ -33,7 +33,7 @@ func (s *Server) MountRoutes() {
 	}))
 
 	// init repo
-	userRepo := repository.NewUserRepo(s.db)
+	userRepo := repository.NewUserRepo(s.db, s.logger)
 	roleRepo := repository.NewRoleRepo(s.db, s.logger)
 
 	// init service

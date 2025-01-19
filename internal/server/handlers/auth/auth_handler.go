@@ -277,12 +277,17 @@ func (h *AuthHandler) Logout(c echo.Context) error {
 }
 
 func (h *AuthHandler) Me(c echo.Context) error {
-	user, ok := c.Get(model.UserCtxKey).(model.User)
+	userCTX, ok := c.Get(model.UserCtxKey).(model.User)
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, httpresponse.RestError{
 			ErrError:  echo.ErrUnauthorized.Error(),
-			ErrCauses: "unauthorized",
+			ErrCauses: "unauthorized (kenapa di ubah datanya woy)",
 		})
+	}
+
+	user, err := h.userService.FindByEmail(c.Request().Context(), userCTX.Email)
+	if err != nil {
+		return httpresponse.KnownSQLError(c, err)
 	}
 
 	user.Sanitize()

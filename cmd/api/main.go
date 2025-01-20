@@ -28,7 +28,7 @@ func main() {
 		logger.Info().Msg("mode development")
 		// logger.Level(zerolog.DebugLevel)
 	}
-	rdb := db.NewRedisClient(&logger, cfg)
+	rdb := db.NewRedisClient(cfg, &logger)
 	defer func() {
 		if err := rdb.Close(); err != nil {
 			log.Error().Err(err).Msg("failed to close redis")

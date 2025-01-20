@@ -30,6 +30,7 @@ postgres:
   PgMaxConn: 200 # Max koneksi aktif di pool
   PgMaxConnLifetime: 120 # Max koneksi idle di pool
   PgMaxIdleTime: "15m" # Koneksi maksimum bertahan selama 15 menit
+  MigrationFile: file://../../../db/migration
 
 redis:
   RedisHost: localhost

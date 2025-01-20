@@ -9,7 +9,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func NewRedisClient(logger *zerolog.Logger, cfg *config.Config) *redis.Client {
+func NewRedisClient(cfg *config.Config, logger *zerolog.Logger) *redis.Client {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:         fmt.Sprintf("%s:%s", cfg.Redis.RedisHost, cfg.Redis.RedisPort),
 		Password:     cfg.Redis.RedisPassword,

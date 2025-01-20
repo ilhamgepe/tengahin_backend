@@ -53,6 +53,7 @@ type PostgresConfig struct {
 	PgMaxConnLifetime  int
 	PgMaxIdleTime      time.Duration
 	PgConnectTimeout   time.Duration
+	MigrationFile      string
 }
 
 type RedisConfig struct {

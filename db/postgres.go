@@ -35,7 +35,7 @@ func NewPostgresDB(cfg *config.Config, logger *zerolog.Logger) *sqlx.DB {
 	logger.Info().Msg("db connected")
 
 	// run migration
-	migration.RunDBMigration("file://db/migration", dsn, logger)
+	migration.RunDBMigration(cfg.Postgres.MigrationFile, dsn, logger)
 
 	return db
 }

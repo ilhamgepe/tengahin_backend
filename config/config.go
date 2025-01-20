@@ -2,7 +2,6 @@ package config
 
 import (
 	"errors"
-	"log"
 	"time"
 
 	"github.com/spf13/viper"
@@ -74,15 +73,12 @@ func LoadConfig(path string, filename string) (*Config, error) {
 	v.AddConfigPath(".")
 	v.AutomaticEnv()
 	if err := v.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			return nil, errors.New("config file not found")
-		}
 		return nil, err
 	}
 
 	var cfg Config
 	if err := v.Unmarshal(&cfg); err != nil {
-		log.Fatal(err)
+		return nil, errors.New("failed to unmarshal config")
 	}
 
 	return &cfg, nil

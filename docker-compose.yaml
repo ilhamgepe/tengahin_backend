@@ -15,7 +15,7 @@ services:
 
   redis:
     container_name: tengahin_redis
-    image: redis:8.0-M02-alpine
+    image: redis:8.0-M03-alpine
     environment:
       - REDIS_PASSWORD=root
     command: ["redis-server", "--requirepass", "root"]
